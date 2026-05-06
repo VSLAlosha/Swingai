@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<!-- saved from url=(0044)file:///C:/Users/Game/Downloads/SwingAI.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SwingAI">
+<title>SwingAI</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+:root{
+  --bg0:#0a110c;--bg1:#0f1a11;--bg2:#131f15;--bg3:#1a2a1e;
+  --border:#1e2e20;--border2:#253028;
+  --accent:#b9f542;--accent2:#4ade80;--acdim:#b9f54222;
+  --text:#e8fbe8;--text2:#a0baa0;--text3:#5a7a5a;
+  --red:#f87171;--blue:#60a5fa;--amber:#fbbf24;--purple:#a78bfa;
+}
+html,body{height:100%;background:var(--bg0);color:var(--text);font-family:'DM Sans',system-ui,sans-serif;overflow:hidden;-webkit-font-smoothing:antialiased}
+#app{height:100%;display:flex;flex-direction:column;max-width:430px;margin:0 auto;position:relative;background:var(--bg0)}
+/* scrollable main */
+#main{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:72px}
+#main::-webkit-scrollbar{display:none}
+/* navbar */
+#navbar{height:52px;background:var(--bg1);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 14px;flex-shrink:0;padding-top:env(safe-area-inset-top)}
+.nav-title{font-size:15px;font-weight:800;letter-spacing:-.02em}
+.nav-title span{color:var(--accent)}
+.status-pill{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;border:1px solid var(--border2);background:var(--bg2);font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;transition:all .3s}
+.status-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;transition:all .3s}
+/* mode tabs */
+#modebar{display:flex;background:var(--bg1);border-bottom:1px solid var(--border);flex-shrink:0}
+.mode-tab{flex:1;padding:9px 4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;text-align:center;color:var(--text3);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s}
+.mode-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+/* camera */
+#cam-wrap{position:relative;width:100%;background:#000;flex-shrink:0;aspect-ratio:4/3}
+#cam-canvas{width:100%;height:100%;display:block;object-fit:cover}
+#cam-video{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.cam-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px}
+.btn-primary{padding:10px 22px;border-radius:14px;border:none;background:var(--accent);color:#0a110c;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:transform .15s}
+.btn-primary:active{transform:scale(.96)}
+.btn-sec{padding:8px 16px;border-radius:14px;border:1px solid var(--border2);background:var(--bg2);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+.hud-bar{position:absolute;top:8px;left:8px;right:8px;display:flex;justify-content:space-between;pointer-events:none;z-index:10}
+.hud-pill{display:flex;align-items:center;gap:4px;padding:3px 8px;border-radius:999px;background:rgba(0,0,0,.65);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.cam-controls{position:absolute;bottom:8px;left:8px;right:8px;display:flex;gap:6px;z-index:10}
+.cam-ctrl{padding:7px 10px;border-radius:11px;border:1px solid rgba(255,255,255,.15);background:rgba(0,0,0,.65);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);color:rgba(255,255,255,.85);font-size:10px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;font-family:inherit}
+.motion-ring{position:absolute;inset:0;pointer-events:none;z-index:20;border:3px solid var(--accent);opacity:0;transition:opacity .15s;border-radius:0}
+.motion-ring.flash{opacity:1}
+.analyzing-ov{position:absolute;inset:0;background:rgba(0,0,0,.6);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;z-index:30}
+.spinner{width:36px;height:36px;border:3px solid var(--bg2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* stats */
+.section-hdr{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);padding:10px 12px 4px;display:flex;align-items:center;gap:5px}
+.stats-3{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:4px 12px 6px}
+.stats-4{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:0 12px 8px}
+.big-tile{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:10px 6px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.big-val{font-family:'DM Mono',monospace;font-weight:700;line-height:1;font-size:clamp(1.35rem,5.5vw,2.1rem);color:var(--accent)}
+.big-unit{font-size:.42em;opacity:.5;margin-left:1px}
+.big-label{font-size:8px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-top:4px;font-weight:600}
+.mini-tile{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:7px 4px;display:flex;flex-direction:column;align-items:center}
+.mini-val{font-family:'DM Mono',monospace;font-weight:700;font-size:13px;color:var(--accent)}
+.mini-label{font-size:7px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-top:2px}
+/* result banner */
+.result-banner{background:hsl(142,55%,8%);border-bottom:1px solid hsl(142,50%,16%);padding:8px 12px;display:flex;align-items:center;justify-content:space-between}
+.result-score{font-size:28px;font-weight:700;font-family:'DM Mono',monospace;color:var(--accent)}
+.flight-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px}
+/* clubs */
+.club-scroll{display:flex;gap:6px;padding:4px 12px 8px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.club-scroll::-webkit-scrollbar{display:none}
+.chip{padding:6px 12px;border-radius:999px;border:1px solid var(--border2);background:var(--bg2);font-size:11px;font-weight:600;color:var(--text2);cursor:pointer;white-space:nowrap;flex-shrink:0;font-family:inherit;transition:all .15s}
+.chip.active{background:var(--accent);color:#0a110c;border-color:var(--accent)}
+/* modifiers */
+.mods{display:flex;gap:6px;padding:4px 12px 6px;flex-wrap:wrap}
+.mod-btn{padding:6px 11px;border-radius:999px;border:1px solid var(--border2);background:var(--bg2);font-size:10px;font-weight:600;color:var(--text2);cursor:pointer;font-family:inherit;transition:all .2s}
+.mod-btn.on{border-color:var(--accent);background:var(--acdim);color:var(--accent)}
+.mod-hint{font-size:9px;color:var(--text3);padding:0 12px 6px;font-style:italic;min-height:16px}
+/* shapes */
+.shapes-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:4px 12px 8px}
+.shape-btn{background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:9px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;font-family:inherit;transition:all .15s}
+.shape-btn.active{background:var(--acdim);border-color:var(--accent)}
+/* simulation */
+.sim-wrap{margin:4px 12px 8px;border-radius:14px;overflow:hidden;background:hsl(218,22%,4%);border:1px solid var(--border)}
+.sim-header{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-bottom:1px solid var(--border)}
+.sim-stat-row{display:flex;justify-content:space-around;padding:6px 8px 8px;border-top:1px solid var(--border)}
+/* coach */
+.coach-wrap{display:flex;flex-direction:column;gap:8px;padding:6px 12px}
+.primary-fix{background:hsl(142,55%,9%);border:1px solid hsl(142,50%,17%);border-radius:14px;padding:12px;display:flex;gap:10px}
+.tip-item{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:9px 11px;font-size:12px;color:var(--text2);line-height:1.4;display:flex;gap:8px}
+.strength-chip{flex:1;background:hsl(142,40%,8%);border:1px solid hsl(142,40%,14%);border-radius:10px;padding:8px;font-size:11px;color:hsl(142,60%,56%);text-align:center;line-height:1.3}
+.score-box{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:7px 4px;display:flex;flex-direction:column;align-items:center}
+.drill-item{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:9px 11px}
+/* chat */
+#chat-fab{position:fixed;bottom:80px;right:14px;width:48px;height:48px;border-radius:50%;background:var(--accent);border:none;cursor:pointer;font-size:20px;box-shadow:0 4px 20px rgba(185,245,66,.35);z-index:200;display:flex;align-items:center;justify-content:center;transition:transform .2s}
+#chat-fab:active{transform:scale(.9)}
+#chat-panel{position:fixed;inset:0;background:var(--bg0);z-index:400;display:flex;flex-direction:column;max-width:430px;margin:0 auto;transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1)}
+#chat-panel.open{transform:translateY(0)}
+.chat-head{padding:14px 16px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg1);padding-top:calc(14px + env(safe-area-inset-top))}
+.chat-msgs{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.chat-msgs::-webkit-scrollbar{display:none}
+.msg-row{display:flex;gap:8px;max-width:88%}
+.msg-row.user{align-self:flex-end;flex-direction:row-reverse}
+.msg-av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+.msg-bubble{padding:8px 11px;border-radius:14px;font-size:12px;line-height:1.5}
+.msg-bubble.ai{background:var(--bg2);color:var(--text);border:1px solid var(--border)}
+.msg-bubble.user{background:hsl(142,55%,12%);color:var(--text);border:1px solid hsl(142,50%,20%)}
+.quick-qs{display:flex;gap:5px;padding:6px 12px 4px;overflow-x:auto;-webkit-overflow-scrolling:touch;flex-shrink:0}
+.quick-qs::-webkit-scrollbar{display:none}
+.qq{padding:5px 10px;border-radius:999px;border:1px solid var(--border2);background:var(--bg2);font-size:10px;color:var(--text2);cursor:pointer;white-space:nowrap;flex-shrink:0;font-family:inherit}
+.chat-input-row{display:flex;gap:8px;padding:8px 12px;padding-bottom:calc(8px + env(safe-area-inset-bottom));border-top:1px solid var(--border);background:var(--bg1);flex-shrink:0}
+.chat-input{flex:1;background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:9px 12px;font-size:13px;color:var(--text);outline:none;font-family:inherit;-webkit-appearance:none}
+.chat-input:focus{border-color:var(--accent)}
+.chat-send{width:38px;height:38px;border-radius:12px;background:var(--accent);border:none;cursor:pointer;font-size:16px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.chat-send:disabled{opacity:.4}
+/* settings */
+#settings-panel{position:fixed;inset:0;background:var(--bg0);z-index:500;display:none;flex-direction:column;max-width:430px;margin:0 auto}
+#settings-panel.open{display:flex}
+.settings-head{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;background:var(--bg1);padding-top:calc(14px + env(safe-area-inset-top))}
+.input-field{width:100%;background:var(--bg1);border:1px solid var(--border2);border-radius:10px;padding:9px 12px;font-size:13px;color:var(--text);outline:none;font-family:inherit;-webkit-appearance:none;margin-top:5px}
+.input-field:focus{border-color:var(--accent)}
+.label-sm{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--text3)}
+.key-status{font-size:11px;padding:6px 10px;border-radius:8px;margin-top:6px}
+/* tabbar */
+#tabbar{position:fixed;bottom:0;left:0;right:0;max-width:430px;margin:0 auto;height:calc(58px + env(safe-area-inset-bottom));background:var(--bg1);border-top:1px solid var(--border);display:flex;padding-bottom:env(safe-area-inset-bottom);z-index:150}
+.tab-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:none;background:none;color:var(--text3);font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;cursor:pointer;font-family:inherit;transition:color .2s}
+.tab-btn.active{color:var(--accent)}
+.tab-icon{font-size:17px;line-height:1}
+/* toast */
+#toast{position:fixed;top:68px;left:50%;transform:translateX(-50%) translateY(-8px);background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:8px 16px;font-size:12px;color:var(--text2);z-index:600;pointer-events:none;opacity:0;transition:all .3s;white-space:nowrap}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+/* history */
+.hist-item{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:10px 12px;display:flex;align-items:center;gap:10px;margin-bottom:7px}
+.hist-score{width:38px;height:38px;border-radius:50%;border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;font-family:'DM Mono',monospace;color:var(--accent);flex-shrink:0}
+/* api key input password toggle */
+.key-wrap{position:relative}
+.key-wrap input{padding-right:40px}
+.key-toggle{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text3);cursor:pointer;font-size:13px;padding:4px}
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- Navbar -->
+  <div id="navbar">
+    <div style="display:flex;align-items:center;gap:8px">
+      <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+        <rect width="26" height="26" rx="6" fill="#0f2014"></rect>
+        <path d="M7 5L17 22" stroke="#b9f542" stroke-width="2.5" stroke-linecap="round"></path>
+        <circle cx="20" cy="20" r="4" fill="white" opacity=".9"></circle>
+      </svg>
+      <div class="nav-title">Swing<span>AI</span></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div class="status-pill" id="ai-pill">
+        <div class="status-dot" id="ai-dot" style="background: rgb(68, 68, 68); box-shadow: none;"></div>
+        <span id="ai-label">No Key</span>
+      </div>
+      <button onclick="openSettings()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px;padding:4px">⚙</button>
+    </div>
+  </div>
+
+  <!-- Mode tabs -->
+  <div id="modebar">
+    <button class="mode-tab active" onclick="setMode(&#39;launch-monitor&#39;)">Launch</button>
+    <button class="mode-tab" onclick="setMode(&#39;coach&#39;)">Coach</button>
+    <button class="mode-tab" onclick="setMode(&#39;shot-shape&#39;)">Shot Shape</button>
+  </div>
+
+  <!-- Main -->
+  <div id="main">
+    <!-- Camera -->
+    <div id="cam-wrap">
+      <canvas id="cam-canvas" width="640" height="480"></canvas>
+      <video id="cam-video" playsinline="" muted="" autoplay=""></video>
+
+      <!-- HUD -->
+      <div class="hud-bar" id="hud-bar" style="display:none">
+        <div class="hud-pill">
+          <div class="status-dot" id="hud-dot" style="background:#555"></div>
+          <span id="hud-label" style="font-size:9px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#888">Waiting</span>
+        </div>
+        <div class="hud-pill">
+          <div class="status-dot" style="background:#22c55e;box-shadow:0 0 6px #22c55e"></div>
+          <span id="cam-facing-label" style="font-size:9px;font-weight:700;color:white">LIVE · FRONT</span>
+        </div>
+      </div>
+
+      <!-- Camera off -->
+      <div class="cam-overlay" id="cam-off">
+        <div style="font-size:36px;opacity:.2">📷</div>
+        <p style="font-size:13px;font-weight:600;color:rgba(255,255,255,.35)">Camera Off</p>
+        <button class="btn-primary" onclick="startCamera()">Start Camera</button>
+        <label class="btn-sec" style="display:flex;align-items:center;gap:6px;cursor:pointer">
+          ↑ Upload Photo / Video
+          <input type="file" id="file-input" accept="image/*,video/*" style="display:none" onchange="handleFile(event)">
+        </label>
+      </div>
+
+      <!-- Camera controls -->
+      <div class="cam-controls" id="cam-controls" style="display:none">
+        <button class="cam-ctrl" id="flip-btn" onclick="flipCamera()">
+          <span style="font-size:15px">⇄</span>
+          <span id="flip-label">BACK</span>
+        </button>
+        <button class="cam-ctrl" id="analyze-btn" onclick="captureAndAnalyze()" style="flex:2;border-color:rgba(185,245,66,.35);background:rgba(185,245,66,.1);color:#b9f542">
+          <span style="font-size:15px">⬤</span>
+          ANALYZE
+        </button>
+        <button class="cam-ctrl" onclick="stopCamera()">
+          <span style="font-size:15px">⏻</span>
+          OFF
+        </button>
+      </div>
+
+      <!-- Motion flash ring -->
+      <div class="motion-ring" id="motion-ring"></div>
+
+      <!-- Analyzing overlay -->
+      <div class="analyzing-ov" id="analyzing-ov" style="display:none">
+        <div class="spinner"></div>
+        <p style="font-size:12px;color:rgba(255,255,255,.6);font-weight:600">AI Analyzing…</p>
+      </div>
+    </div>
+
+    <!-- Result banner -->
+    <div class="result-banner" id="result-banner" style="display:none">
+      <div>
+        <div style="font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);font-weight:700">Swing Score</div>
+        <div style="display:flex;align-items:baseline;gap:8px;margin-top:1px">
+          <span class="result-score" id="r-score">—</span>
+          <span style="font-size:11px;color:var(--text3)">/10</span>
+          <span class="flight-badge" id="r-flight">straight</span>
+        </div>
+        <div style="font-size:10px;color:var(--text3);margin-top:1px" id="r-meta">—</div>
+      </div>
+      <button onclick="clearResult()" style="padding:5px 10px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);font-size:10px;color:var(--text3);cursor:pointer;font-family:inherit">Clear</button>
+    </div>
+
+    <!-- Club selector -->
+    <div class="section-hdr">⛳ Club</div>
+    <div class="club-scroll" id="club-scroll"><button class="chip">Driver</button><button class="chip">3-Wood</button><button class="chip">5-Wood</button><button class="chip">3-Hybrid</button><button class="chip">4-Hybrid</button><button class="chip">5-Iron</button><button class="chip">6-Iron</button><button class="chip active">7-Iron</button><button class="chip">8-Iron</button><button class="chip">9-Iron</button><button class="chip">Pitching Wedge</button><button class="chip">Gap Wedge</button><button class="chip">Sand Wedge</button><button class="chip">Lob Wedge</button></div>
+
+    <!-- Modifiers -->
+    <div class="section-hdr">⚙ Modifiers</div>
+    <div class="mods" id="mods-row">
+      <button class="mod-btn" id="mod-practice" onclick="toggleMod(&#39;practice&#39;)">Practice Swing</button>
+      <button class="mod-btn on" id="mod-foam" onclick="toggleMod(&#39;foam&#39;)">Foam Ball</button>
+      <button class="mod-btn" id="mod-chip" onclick="toggleMod(&#39;chip&#39;)">Chip</button>
+      <button class="mod-btn" id="mod-full" onclick="toggleMod(&#39;full&#39;)">Full Swing</button>
+      <button class="mod-btn" id="mod-motion" onclick="toggleMod(&#39;motion&#39;)">⏱ Auto-Detect</button>
+    </div>
+    <div class="mod-hint" id="mod-hint">Indoor foam ball physics applied — ~60% ball speed, ~20% carry.</div>
+
+    <!-- Shot shape (shot-shape mode only) -->
+    <div id="shapes-section" style="display:none">
+      <div class="section-hdr">🎯 Target Shape</div>
+      <div class="shapes-grid" id="shapes-grid"><button class="shape-btn active" data-shape="straight"><div style="font-size:11px;font-weight:700;color:var(--accent)">Straight</div><div style="font-size:9px;color:var(--text3);text-align:center;line-height:1.3">Square face, neutral path</div></button><button class="shape-btn" data-shape="draw"><div style="font-size:11px;font-weight:700;color:var(--text)">Draw</div><div style="font-size:9px;color:var(--text3);text-align:center;line-height:1.3">Gentle right-to-left</div></button><button class="shape-btn" data-shape="fade"><div style="font-size:11px;font-weight:700;color:var(--text)">Fade</div><div style="font-size:9px;color:var(--text3);text-align:center;line-height:1.3">Gentle left-to-right</div></button><button class="shape-btn" data-shape="hook"><div style="font-size:11px;font-weight:700;color:var(--text)">Hook</div><div style="font-size:9px;color:var(--text3);text-align:center;line-height:1.3">Sharp right-to-left</div></button><button class="shape-btn" data-shape="slice"><div style="font-size:11px;font-weight:700;color:var(--text)">Slice</div><div style="font-size:9px;color:var(--text3);text-align:center;line-height:1.3">Sharp left-to-right</div></button><button class="shape-btn" data-shape="high"><div style="font-size:11px;font-weight:700;color:var(--text)">High</div><div style="font-size:9px;color:var(--text3);text-align:center;line-height:1.3">Higher trajectory</div></button><button class="shape-btn" data-shape="low"><div style="font-size:11px;font-weight:700;color:var(--text)">Low</div><div style="font-size:9px;color:var(--text3);text-align:center;line-height:1.3">Low penetrating flight</div></button><button class="shape-btn" data-shape="punch"><div style="font-size:11px;font-weight:700;color:var(--text)">Punch</div><div style="font-size:9px;color:var(--text3);text-align:center;line-height:1.3">Low, under wind</div></button><button class="shape-btn" data-shape="flop"><div style="font-size:11px;font-weight:700;color:var(--text)">Flop</div><div style="font-size:9px;color:var(--text3);text-align:center;line-height:1.3">High, soft landing</div></button></div>
+    </div>
+
+    <!-- Launch stats -->
+    <div class="section-hdr">📊 Launch Data</div>
+    <div class="stats-3">
+      <div class="big-tile"><div class="big-val" id="s-swing"><span style="color:var(--text3);font-size:.7em">—</span></div><div class="big-label">Club mph</div></div>
+      <div class="big-tile"><div class="big-val" id="s-ball"><span style="color:var(--text3);font-size:.7em">—</span></div><div class="big-label">Ball mph</div></div>
+      <div class="big-tile"><div class="big-val" id="s-carry"><span style="color:var(--text3);font-size:.7em">—</span></div><div class="big-label">Carry yds</div></div>
+    </div>
+    <div class="stats-4">
+      <div class="mini-tile"><div class="mini-val" id="s-launch">—</div><div class="mini-label">Launch °</div></div>
+      <div class="mini-tile"><div class="mini-val" id="s-spin">—</div><div class="mini-label">Spin rpm</div></div>
+      <div class="mini-tile"><div class="mini-val" id="s-smash">—</div><div class="mini-label">Smash</div></div>
+      <div class="mini-tile"><div class="mini-val" id="s-total">—</div><div class="mini-label">Total yds</div></div>
+    </div>
+
+    <!-- Simulation -->
+    <div class="sim-wrap" id="sim-wrap">
+      <div id="sim-off" style="padding:10px 12px;display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3)">Ball Flight Sim</div>
+          <div style="font-size:9px;color:var(--text3);margin-top:2px" id="sim-hint">Analyze a swing to activate</div>
+        </div>
+        <button onclick="enableSim()" id="sim-enable-btn" style="font-size:10px;font-weight:700;padding:7px 14px;border-radius:10px;border:1px solid var(--border2);background:var(--bg2);color:var(--text3);cursor:pointer;font-family:inherit">Enable</button>
+      </div>
+      <div id="sim-active" style="display:none">
+        <div class="sim-header">
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3)">Ball Flight</span>
+            <span id="sim-shape-badge" style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:4px;background:var(--acdim);color:var(--accent)">straight</span>
+          </div>
+          <div style="display:flex;gap:6px">
+            <button id="sim-play-btn" onclick="playSim()" style="font-size:9px;font-weight:700;padding:4px 10px;border-radius:7px;border:1px solid hsl(142,50%,28%);background:hsl(142,50%,11%);color:hsl(142,60%,65%);cursor:pointer;font-family:inherit">▶ Play</button>
+            <button id="sim-stop-btn" onclick="stopSim()" style="display:none;font-size:9px;font-weight:700;padding:4px 10px;border-radius:7px;border:1px solid hsl(0,45%,26%);background:hsl(0,45%,11%);color:hsl(0,60%,62%);cursor:pointer;font-family:inherit">■ Stop</button>
+            <button onclick="disableSim()" style="font-size:9px;padding:4px 8px;border-radius:7px;border:1px solid var(--border);color:var(--text3);background:transparent;cursor:pointer;font-family:inherit">✕</button>
+          </div>
+        </div>
+        <svg id="sim-svg" viewBox="0 0 400 200" style="width:100%;display:block"><defs>
+    <lineargradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="hsl(222,32%,5%)"></stop><stop offset="100%" stop-color="hsl(165,18%,6%)"></stop></lineargradient>
+    <lineargradient id="fw" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="hsl(138,32%,9%)"></stop><stop offset="100%" stop-color="hsl(140,40%,11%)"></stop></lineargradient>
+    <lineargradient id="rg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="hsl(138,16%,6%)"></stop><stop offset="100%" stop-color="hsl(140,18%,8%)"></stop></lineargradient>
+    <filter id="glow"><fegaussianblur stdDeviation="3" result="b"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge></filter>
+    <filter id="bfx"><fegaussianblur stdDeviation="4" result="b"></fegaussianblur><femerge><femergenode in="b"></femergenode><femergenode in="SourceGraphic"></femergenode></femerge></filter>
+    <clippath id="cl"><rect x="0" y="0" width="0%" height="200"></rect></clippath>
+  </defs>
+  <rect width="400" height="200" fill="url(#sky)"></rect>
+  <ellipse cx="200" cy="20" rx="70" ry="8" fill="hsl(160,50%,12%)" opacity=".3"></ellipse>
+  <polygon points="0,200 400,200 220,24 180,24" fill="url(#rg)"></polygon>
+  <polygon points="75,200 325,200 220,24 180,24" fill="url(#fw)"></polygon><line x1="98.1" y1="145.48" x2="301.9" y2="145.48" stroke="rgba(255,255,255,.07)" stroke-width=".5"></line><text x="305.9" y="148.48" font-size="5" fill="rgba(255,255,255,.22)" font-family="monospace">22</text><line x1="121.2" y1="108.96" x2="278.8" y2="108.96" stroke="rgba(255,255,255,.07)" stroke-width=".5"></line><text x="282.8" y="111.96" font-size="5" fill="rgba(255,255,255,.22)" font-family="monospace">44</text><line x1="144.3" y1="72.44" x2="255.7" y2="72.44" stroke="rgba(255,255,255,.07)" stroke-width=".5"></line><text x="259.7" y="75.44" font-size="5" fill="rgba(255,255,255,.22)" font-family="monospace">66</text><line x1="165.3" y1="39.24000000000001" x2="234.7" y2="39.24000000000001" stroke="rgba(255,255,255,.07)" stroke-width=".5"></line><text x="238.7" y="42.24000000000001" font-size="5" fill="rgba(255,255,255,.22)" font-family="monospace">86</text><ellipse cx="200" cy="182" rx="5" ry="2" fill="#4ade80" opacity=".3"></ellipse>
+  <line x1="200" y1="182" x2="200" y2="176" stroke="#4ade80" stroke-width="1.2" opacity=".5"></line>
+  <path d="M 200,182 Q 200,115.6 200,178" stroke="#4ade80" stroke-width="1" fill="none" opacity=".1"></path></svg>
+        <div class="sim-stat-row">
+          <div style="text-align:center"><div style="font-size:13px;font-weight:700;font-family:&#39;DM Mono&#39;,monospace;color:var(--accent)" id="ss-carry">—</div><div style="font-size:8px;text-transform:uppercase;letter-spacing:.07em;color:var(--text3)">Carry</div></div>
+          <div style="text-align:center"><div style="font-size:13px;font-weight:700;font-family:&#39;DM Mono&#39;,monospace;color:var(--accent)" id="ss-ball">—</div><div style="font-size:8px;text-transform:uppercase;letter-spacing:.07em;color:var(--text3)">Ball mph</div></div>
+          <div style="text-align:center"><div style="font-size:13px;font-weight:700;font-family:&#39;DM Mono&#39;,monospace;color:var(--accent)" id="ss-spin">—</div><div style="font-size:8px;text-transform:uppercase;letter-spacing:.07em;color:var(--text3)">Spin</div></div>
+          <div style="text-align:center"><div style="font-size:13px;font-weight:700;font-family:&#39;DM Mono&#39;,monospace;color:var(--accent)" id="ss-launch">—</div><div style="font-size:8px;text-transform:uppercase;letter-spacing:.07em;color:var(--text3)">Launch °</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Coach section -->
+    <div id="coach-section" style="display:none" class="coach-wrap"></div>
+
+    <!-- Shot shape result -->
+    <div id="shape-result" style="display:none;padding:4px 12px 8px">
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3)">Shape Result</div>
+          <div style="font-size:14px;font-weight:700;font-family:&#39;DM Mono&#39;,monospace;color:var(--accent)" id="shape-pct">—%</div>
+        </div>
+        <div style="font-size:12px;color:var(--text2);line-height:1.5" id="shape-feedback">Analyze a swing to see shape feedback.</div>
+      </div>
+    </div>
+    <div style="height:8px"></div>
+  </div><!-- end #main -->
+
+  <!-- Chat FAB -->
+  <button id="chat-fab" onclick="openChat()">💬</button>
+
+  <!-- Chat Panel -->
+  <div id="chat-panel">
+    <div class="chat-head">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:34px;height:34px;border-radius:50%;background:var(--acdim);display:flex;align-items:center;justify-content:center;font-size:18px">🏌️</div>
+        <div>
+          <div style="font-size:14px;font-weight:700">AI Golf Coach</div>
+          <div style="font-size:10px;color:var(--text3)">Powered by Gemini · Session-aware</div>
+        </div>
+      </div>
+      <button onclick="closeChat()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:20px;padding:4px">✕</button>
+    </div>
+    <div class="quick-qs" id="quick-qs"><button class="qq">What's my biggest issue?</button><button class="qq">How do I fix smash factor?</button><button class="qq">How do I hit more draws?</button><button class="qq">What drill should I do?</button><button class="qq">Why is my spin so high?</button><button class="qq">How do I add distance?</button></div>
+    <div class="chat-msgs" id="chat-msgs">
+      <div style="display:flex;gap:8px;max-width:88%">
+        <div class="msg-av" style="background:var(--acdim);color:var(--accent)">AI</div>
+        <div class="msg-bubble ai">Hey! I'm your AI golf coach. Analyze a swing and I'll give you specific feedback, or just ask me anything about your game. 🏌️</div>
+      </div>
+    </div>
+    <div class="chat-input-row">
+      <input class="chat-input" id="chat-input" placeholder="Ask your coach…" onkeydown="if(event.key===&#39;Enter&#39;&amp;&amp;!event.shiftKey){event.preventDefault();sendChat()}">
+      <button class="chat-send" id="chat-send" onclick="sendChat()">➤</button>
+    </div>
+  </div>
+
+  <!-- Settings Panel -->
+  <div id="settings-panel">
+    <div class="settings-head">
+      <button onclick="closeSettings()" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px">←</button>
+      <span style="font-size:15px;font-weight:700">Settings</span>
+    </div>
+    <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 12px 80px">
+      <!-- API Key -->
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:12px">
+        <div style="font-size:13px;font-weight:700;margin-bottom:4px">Gemini API Key</div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.5">Get a free key at <span style="color:var(--accent)">aistudio.google.com</span> → Get API Key. 1,500 free requests/day.</div>
+        <div class="label-sm">API Key</div>
+        <div class="key-wrap">
+          <input class="input-field" id="api-key-input" type="password" placeholder="AIza…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+          <button class="key-toggle" onclick="toggleKeyVisibility()" id="key-toggle-btn">👁</button>
+        </div>
+        <div id="key-status" class="key-status" style="display:none"></div>
+        <button onclick="saveApiKey()" class="btn-primary" style="width:100%;margin-top:10px;padding:11px">Save Key</button>
+      </div>
+      <!-- Profile -->
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:12px">
+        <div style="font-size:13px;font-weight:700;margin-bottom:12px">Profile</div>
+        <div style="margin-bottom:10px">
+          <div class="label-sm">Name</div>
+          <input class="input-field" id="prof-name" placeholder="Your name">
+        </div>
+        <div style="margin-bottom:10px">
+          <div class="label-sm">Dominant Hand</div>
+          <select class="input-field" id="prof-hand" style="cursor:pointer">
+            <option value="right">Right-handed</option>
+            <option value="left">Left-handed</option>
+          </select>
+        </div>
+        <div style="margin-bottom:12px">
+          <div class="label-sm">Handicap</div>
+          <input class="input-field" id="prof-handicap" type="number" placeholder="e.g. 12" min="0" max="54">
+        </div>
+        <button onclick="saveProfile()" class="btn-primary" style="width:100%;padding:11px">Save Profile</button>
+      </div>
+      <!-- Model info -->
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:12px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:6px">AI Model</div>
+        <div style="font-size:12px;color:var(--text2);line-height:1.6"><strong style="color:var(--accent)">Gemini 2.0 Flash</strong> for vision analysis.<br><strong style="color:var(--accent)">Gemini 2.0 Flash</strong> for coaching chat.<br>Runs directly in your browser — no server needed.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="">⚙ Add your Gemini API key in Settings to start</div>
+
+  <!-- History tab -->
+  <div id="tab-history" style="display:none;position:fixed;inset:0;background:var(--bg0);z-index:100;flex-direction:column;max-width:430px;margin:0 auto">
+    <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;background:var(--bg1);padding-top:calc(14px + env(safe-area-inset-top));flex-shrink:0">
+      <button onclick="showTab(&#39;analyzer&#39;)" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px">←</button>
+      <span style="font-size:15px;font-weight:700">Session History</span>
+    </div>
+    <div id="history-list" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:10px 12px 80px"></div>
+  </div>
+
+  <!-- Profile tab -->
+  <div id="tab-profile" style="display:none;position:fixed;inset:0;background:var(--bg0);z-index:100;flex-direction:column;max-width:430px;margin:0 auto">
+    <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;background:var(--bg1);padding-top:calc(14px + env(safe-area-inset-top));flex-shrink:0">
+      <button onclick="showTab(&#39;analyzer&#39;)" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px">←</button>
+      <span style="font-size:15px;font-weight:700">Profile</span>
+    </div>
+    <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 12px 80px">
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:12px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+          <div id="prof-avatar" style="width:48px;height:48px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#0a110c">G</div>
+          <div>
+            <div id="prof-display-name" style="font-size:15px;font-weight:700">Golfer</div>
+            <div id="prof-display-meta" style="font-size:11px;color:var(--text3)">Right-handed</div>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--text2);line-height:1.6">Edit your profile in <strong style="color:var(--accent)">Settings ⚙</strong> (top right).</div>
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:12px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:6px">Sessions</div>
+        <div id="prof-stats" style="font-size:12px;color:var(--text2)">No sessions yet.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom tab bar -->
+  <div id="tabbar">
+    <button class="tab-btn active" id="tab-btn-analyzer" onclick="showTab(&#39;analyzer&#39;)"><span class="tab-icon">⬤</span>Analyzer</button>
+    <button class="tab-btn" id="tab-btn-history" onclick="showTab(&#39;history&#39;)"><span class="tab-icon">☰</span>History</button>
+    <button class="tab-btn" id="tab-btn-profile" onclick="showTab(&#39;profile&#39;)"><span class="tab-icon">👤</span>Profile</button>
+  </div>
+</div>
+
+<script>
+// ── Constants ─────────────────────────────────────────────────────────────────
+const CLUBS=['Driver','3-Wood','5-Wood','3-Hybrid','4-Hybrid','5-Iron','6-Iron','7-Iron','8-Iron','9-Iron','Pitching Wedge','Gap Wedge','Sand Wedge','Lob Wedge'];
+const BM={'Driver':{s:93,c:220,l:12,sp:2500},'3-Wood':{s:87,c:195,l:13,sp:3200},'5-Wood':{s:84,c:180,l:14,sp:3600},'3-Hybrid':{s:82,c:175,l:15,sp:4000},'4-Hybrid':{s:80,c:165,l:16,sp:4200},'5-Iron':{s:77,c:155,l:17,sp:5200},'6-Iron':{s:75,c:145,l:19,sp:5800},'7-Iron':{s:73,c:135,l:21,sp:6500},'8-Iron':{s:71,c:125,l:23,sp:7200},'9-Iron':{s:69,c:115,l:25,sp:8000},'Pitching Wedge':{s:67,c:105,l:27,sp:9000},'Gap Wedge':{s:65,c:95,l:29,sp:9500},'Sand Wedge':{s:63,c:85,l:32,sp:10000},'Lob Wedge':{s:60,c:65,l:36,sp:10500}};
+const SHAPES=[{k:'straight',n:'Straight',d:'Square face, neutral path'},{k:'draw',n:'Draw',d:'Gentle right-to-left'},{k:'fade',n:'Fade',d:'Gentle left-to-right'},{k:'hook',n:'Hook',d:'Sharp right-to-left'},{k:'slice',n:'Slice',d:'Sharp left-to-right'},{k:'high',n:'High',d:'Higher trajectory'},{k:'low',n:'Low',d:'Low penetrating flight'},{k:'punch',n:'Punch',d:'Low, under wind'},{k:'flop',n:'Flop',d:'High, soft landing'}];
+const FC={straight:'#4ade80',draw:'#60a5fa',fade:'#fbbf24',hook:'#a78bfa',slice:'#f87171',high:'#b9f542',low:'#f97316',punch:'#f97316',flop:'#34d399'};
+const DRIFT={draw:-38,fade:34,hook:-62,slice:58,straight:0,high:0,low:2,punch:3,flop:0};
+const MOD_HINTS={practice:'No ball contact — AI focuses on mechanics only, no ball data.',foam:'Indoor foam ball physics: ~60% ball speed, ~20% carry distance.',chip:'Short swing (9 o\'clock or less). AI won\'t penalize compact backswing.',full:'Full swing. AI assesses complete rotation and power.',motion:'Auto-detects swing via pixel motion burst. Fires automatically.'};
+const QUICK_Q=['What\'s my biggest issue?','How do I fix smash factor?','How do I hit more draws?','What drill should I do?','Why is my spin so high?','How do I add distance?'];
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let G={
+  apiKey:'',profile:{name:'Golfer',hand:'right',handicap:''},
+  mode:'launch-monitor',club:'7-Iron',facing:'user',
+  cameraOn:false,practicing:false,foam:true,swingType:null,motionAuto:false,targetShape:'straight',
+  analysis:null,lastAnalysis:null,simEnabled:false,simProgress:0,simPlaying:false,
+  chatMsgs:[],chatStreaming:false,sessions:[],
+};
+
+// ── Storage ───────────────────────────────────────────────────────────────────
+function save(){try{localStorage.setItem('swingai',JSON.stringify({apiKey:G.apiKey,profile:G.profile,sessions:G.sessions.slice(0,50)}))}catch(e){}}
+function load(){
+  try{
+    const d=JSON.parse(localStorage.getItem('swingai')||'{}');
+    if(d.apiKey){G.apiKey=d.apiKey;document.getElementById('api-key-input').value=d.apiKey;}
+    if(d.profile){G.profile=d.profile;}
+    if(d.sessions){G.sessions=d.sessions;}
+    updateKeyStatus();applyProfile();
+  }catch(e){}
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+let toastTimer;
+function toast(msg,dur=2500){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),dur);
+}
+
+// ── Settings ──────────────────────────────────────────────────────────────────
+function openSettings(){
+  const p=document.getElementById('settings-panel');
+  p.classList.add('open');
+  document.getElementById('prof-name').value=G.profile.name||'';
+  document.getElementById('prof-hand').value=G.profile.hand||'right';
+  document.getElementById('prof-handicap').value=G.profile.handicap||'';
+}
+function closeSettings(){document.getElementById('settings-panel').classList.remove('open');}
+function toggleKeyVisibility(){
+  const inp=document.getElementById('api-key-input');
+  inp.type=inp.type==='password'?'text':'password';
+}
+function saveApiKey(){
+  const key=document.getElementById('api-key-input').value.trim();
+  if(!key){toast('Please enter your Gemini API key');return;}
+  G.apiKey=key;save();updateKeyStatus();toast('API key saved ✓');
+}
+function updateKeyStatus(){
+  const el=document.getElementById('key-status');
+  const pill=document.getElementById('ai-pill');
+  const dot=document.getElementById('ai-dot');
+  const label=document.getElementById('ai-label');
+  if(G.apiKey){
+    el.style.display='block';
+    el.style.background='hsl(142,50%,10%)';el.style.color='hsl(142,60%,65%)';el.style.border='1px solid hsl(142,50%,20%)';
+    el.textContent='✓ Key saved — AI ready';
+    pill.style.borderColor='#22c55e44';dot.style.background='#22c55e';dot.style.boxShadow='0 0 8px #22c55e';
+    label.textContent='AI Ready';label.style.color='#22c55e';
+  }else{
+    el.style.display='none';
+    pill.style.borderColor='';dot.style.background='#444';dot.style.boxShadow='none';
+    label.textContent='No Key';label.style.color='';
+  }
+}
+function saveProfile(){
+  G.profile={name:document.getElementById('prof-name').value||'Golfer',hand:document.getElementById('prof-hand').value,handicap:document.getElementById('prof-handicap').value};
+  save();applyProfile();toast('Profile saved ✓');
+}
+function applyProfile(){
+  const n=G.profile.name||'Golfer';
+  document.getElementById('prof-avatar').textContent=n.charAt(0).toUpperCase();
+  document.getElementById('prof-display-name').textContent=n;
+  document.getElementById('prof-display-meta').textContent=(G.profile.hand==='left'?'Left':'Right')+'-handed'+(G.profile.handicap?' · HCP '+G.profile.handicap:'');
+}
+
+// ── Tabs ──────────────────────────────────────────────────────────────────────
+function showTab(t){
+  ['history','profile'].forEach(x=>{
+    const el=document.getElementById('tab-'+x);
+    el.style.display=t===x?'flex':'none';
+  });
+  ['analyzer','history','profile'].forEach(x=>{
+    document.getElementById('tab-btn-'+x)?.classList.toggle('active',x===t);
+  });
+  if(t==='history')renderHistory();
+  if(t==='profile')renderProfileStats();
+}
+
+// ── Mode ──────────────────────────────────────────────────────────────────────
+function setMode(m){
+  G.mode=m;
+  document.querySelectorAll('.mode-tab').forEach((b,i)=>{
+    b.classList.toggle('active',['launch-monitor','coach','shot-shape'][i]===m);
+  });
+  document.getElementById('shapes-section').style.display=m==='shot-shape'?'block':'none';
+  document.getElementById('coach-section').style.display=m==='coach'&&G.lastAnalysis?'block':'none';
+  document.getElementById('shape-result').style.display=m==='shot-shape'&&G.lastAnalysis?'block':'none';
+}
+
+// ── Clubs ─────────────────────────────────────────────────────────────────────
+(function buildClubs(){
+  const s=document.getElementById('club-scroll');
+  CLUBS.forEach(c=>{
+    const b=document.createElement('button');
+    b.className='chip'+(c===G.club?' active':'');
+    b.textContent=c;
+    b.onclick=()=>{G.club=c;document.querySelectorAll('.chip').forEach(x=>x.classList.toggle('active',x.textContent===c));};
+    s.appendChild(b);
+  });
+})();
+
+// ── Shapes ────────────────────────────────────────────────────────────────────
+(function buildShapes(){
+  const g=document.getElementById('shapes-grid');
+  SHAPES.forEach(sh=>{
+    const b=document.createElement('button');
+    b.className='shape-btn'+(sh.k===G.targetShape?' active':'');
+    b.dataset.shape=sh.k;
+    b.innerHTML=`<div style="font-size:11px;font-weight:700;color:${sh.k===G.targetShape?'var(--accent)':'var(--text)'}">${sh.n}</div><div style="font-size:9px;color:var(--text3);text-align:center;line-height:1.3">${sh.d}</div>`;
+    b.onclick=()=>{
+      G.targetShape=sh.k;
+      document.querySelectorAll('.shape-btn').forEach(x=>{
+        const active=x.dataset.shape===sh.k;
+        x.classList.toggle('active',active);
+        x.querySelector('div').style.color=active?'var(--accent)':'var(--text)';
+      });
+    };
+    g.appendChild(b);
+  });
+})();
+
+// ── Quick questions ───────────────────────────────────────────────────────────
+(function buildQQ(){
+  const c=document.getElementById('quick-qs');
+  QUICK_Q.forEach(q=>{
+    const b=document.createElement('button');b.className='qq';b.textContent=q;
+    b.onclick=()=>sendChat(q);c.appendChild(b);
+  });
+})();
+
+// ── Modifiers ─────────────────────────────────────────────────────────────────
+function toggleMod(k){
+  if(k==='practice'){G.practicing=!G.practicing;document.getElementById('mod-practice').classList.toggle('on',G.practicing);}
+  else if(k==='foam'){G.foam=!G.foam;document.getElementById('mod-foam').classList.toggle('on',G.foam);}
+  else if(k==='chip'){G.swingType=G.swingType==='chip'?null:'chip';document.getElementById('mod-chip').classList.toggle('on',G.swingType==='chip');document.getElementById('mod-full').classList.remove('on');}
+  else if(k==='full'){G.swingType=G.swingType==='full'?null:'full';document.getElementById('mod-full').classList.toggle('on',G.swingType==='full');document.getElementById('mod-chip').classList.remove('on');}
+  else if(k==='motion'){G.motionAuto=!G.motionAuto;document.getElementById('mod-motion').classList.toggle('on',G.motionAuto);}
+  const active=G.practicing?'practice':G.foam?'foam':G.swingType==='chip'?'chip':G.swingType==='full'?'full':G.motionAuto?'motion':null;
+  document.getElementById('mod-hint').textContent=active?MOD_HINTS[active]:'';
+}
+
+// ── Camera ────────────────────────────────────────────────────────────────────
+let stream=null,rafId=null,prevFrame=null;
+let motionCooldown=0,stillFrames=0,burstStart=0,awaitBurst=false;
+const video=document.getElementById('cam-video');
+const canvas=document.getElementById('cam-canvas');
+const ctx=canvas.getContext('2d');
+
+async function startCamera(){
+  if(!G.apiKey){toast('Add your Gemini API key in Settings ⚙ first',3500);openSettings();return;}
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:G.facing,width:{ideal:1280},height:{ideal:720}},audio:false});
+    video.srcObject=stream;
+    await video.play();
+    G.cameraOn=true;
+    document.getElementById('cam-off').style.display='none';
+    document.getElementById('cam-controls').style.display='flex';
+    document.getElementById('hud-bar').style.display='flex';
+    document.getElementById('cam-facing-label').textContent='LIVE · '+(G.facing==='user'?'FRONT':'BACK');
+    setHUD('partial','Camera Active');
+    drawLoop();
+  }catch(e){
+    toast('Camera error: '+e.message,4000);
+  }
+}
+function stopCamera(){
+  cancelAnimationFrame(rafId);
+  if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
+  video.srcObject=null;G.cameraOn=false;prevFrame=null;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  document.getElementById('cam-off').style.display='flex';
+  document.getElementById('cam-controls').style.display='none';
+  document.getElementById('hud-bar').style.display='none';
+  setHUD('none','');
+}
+async function flipCamera(){
+  G.facing=G.facing==='user'?'environment':'user';
+  document.getElementById('flip-label').textContent=G.facing==='user'?'BACK':'FRONT';
+  document.getElementById('cam-facing-label').textContent='LIVE · '+(G.facing==='user'?'FRONT':'BACK');
+  if(G.cameraOn){stopCamera();await startCamera();}
+}
+function drawLoop(){
+  if(!G.cameraOn)return;
+  if(video.readyState>=2&&video.videoWidth>0){
+    if(canvas.width!==video.videoWidth){canvas.width=video.videoWidth;canvas.height=video.videoHeight;}
+    if(G.facing==='user'){ctx.save();ctx.translate(canvas.width,0);ctx.scale(-1,1);ctx.drawImage(video,0,0);ctx.restore();}
+    else ctx.drawImage(video,0,0);
+    if(G.motionAuto)detectMotion();
+  }
+  rafId=requestAnimationFrame(drawLoop);
+}
+function detectMotion(){
+  const now=Date.now();
+  if(now-motionCooldown<4500)return;
+  try{
+    const sw=Math.min(canvas.width,320),sh=Math.min(canvas.height,240);
+    const curr=ctx.getImageData(0,0,sw,sh);
+    if(prevFrame){
+      let diff=0;
+      for(let i=0;i<curr.data.length;i+=16){
+        if(Math.abs(curr.data[i]-prevFrame[i])+Math.abs(curr.data[i+1]-prevFrame[i+1])+Math.abs(curr.data[i+2]-prevFrame[i+2])>45)diff++;
+      }
+      const pct=(diff/(curr.data.length/16))*100;
+      if(pct<3){stillFrames=Math.min(stillFrames+1,60);awaitBurst=false;}
+      else if(pct>=18&&stillFrames>=12){
+        if(!awaitBurst){awaitBurst=true;burstStart=now;}
+        const dur=now-burstStart;
+        if(dur>60&&dur<800){
+          motionCooldown=now;stillFrames=0;awaitBurst=false;
+          setTimeout(()=>{flashMotion();captureAndAnalyze();},150);
+        }
+        stillFrames=Math.max(0,stillFrames-2);
+      }
+    }
+    prevFrame=curr.data.slice();
+  }catch(e){}
+}
+function flashMotion(){
+  const r=document.getElementById('motion-ring');
+  r.classList.add('flash');
+  setTimeout(()=>r.classList.remove('flash'),300);
+}
+function setHUD(state,label){
+  const colors={none:'#555',partial:'#fbbf24',ready:'#4ade80'};
+  const dot=document.getElementById('hud-dot');
+  const lbl=document.getElementById('hud-label');
+  dot.style.background=colors[state]||'#555';
+  dot.style.boxShadow=state==='ready'?'0 0 8px #4ade80':state==='partial'?'0 0 6px #fbbf24':'none';
+  lbl.style.color=colors[state]||'#888';
+  lbl.textContent=label||state;
+}
+
+function captureAndAnalyze(){
+  if(!G.cameraOn||canvas.width===0)return;
+  analyzeImage(canvas.toDataURL('image/jpeg',0.92));
+}
+function handleFile(e){
+  const file=e.target.files[0];if(!file)return;e.target.value='';
+  if(!G.apiKey){toast('Add your Gemini API key in Settings ⚙ first',3500);openSettings();return;}
+  if(file.type.startsWith('video/')){
+    const url=URL.createObjectURL(file);
+    const v=document.createElement('video');v.src=url;v.muted=true;
+    v.onloadedmetadata=()=>{v.currentTime=Math.min(v.duration*.6,v.duration-.05);};
+    v.onseeked=()=>{
+      const c=document.createElement('canvas');c.width=v.videoWidth;c.height=v.videoHeight;
+      c.getContext('2d').drawImage(v,0,0);
+      analyzeImage(c.toDataURL('image/jpeg',0.92));
+      URL.revokeObjectURL(url);
+    };
+  }else{
+    const r=new FileReader();r.onloadend=()=>analyzeImage(r.result);r.readAsDataURL(file);
+  }
+}
+
+// ── Gemini Analysis ───────────────────────────────────────────────────────────
+function buildPrompt(club,mode,shape,practice,foam,swingType){
+  const bm=BM[club]||BM['7-Iron'];
+  const foamTxt=foam?`\nFOAM BALL: Using indoor foam/practice ball. Ball speed ~55-70% of real, carry ~15-25% of outdoor. Est for ${club}: swing ${bm.s}mph, ball ~${Math.round(bm.s*.65)}mph, carry ~${Math.round(bm.c*.2)}yds. Still return ALL numeric fields.`:'';
+  const pracTxt=practice?`\nPRACTICE SWING: No ball struck. Return 0 for ballSpeed/carryDistance/spinRate. Focus on mechanics.`:'';
+  const swingTxt=swingType==='chip'?`\nCHIP: Short swing is CORRECT, do NOT penalize.`:swingType==='full'?`\nFULL SWING: Assess complete rotation and power.`:'';
+  const shapeTxt=mode==='shot-shape'&&shape!=='straight'?`\nGolfer attempted a ${shape}. Assess if achieved. Return shapeAccuracyPct (0-100) and shapeFeedback.`:'';
+  const modeCtx=mode==='launch-monitor'?'Focus on launch data accuracy. Minimal coaching language.':mode==='shot-shape'?`Shot shape practice.${shapeTxt}`:'Provide detailed coaching feedback.';
+  return `You are an expert PGA-certified golf coach and launch monitor specialist. Analyze this golf swing image for a ${club}.
+${modeCtx}${foamTxt}${pracTxt}${swingTxt}
+
+CRITICAL: Return ALL numeric fields as real numbers, NEVER null or 0 (unless practice swing). Estimate from mechanics even if image is blurry or partial.
+Amateur benchmark for ${club}: swing ~${bm.s}mph, carry ~${bm.c}yds, launch ~${bm.l}°, spin ~${bm.sp}rpm.
+
+Respond ONLY with valid JSON (no markdown, no backticks):
+{"swingSpeed":number,"ballSpeed":number,"smashFactor":number,"carryDistance":number,"totalDistance":number,"launchAngle":number,"spinRate":number,"ballFlight":"straight|draw|fade|hook|slice","targetShapeAchieved":true|false|null,"shapeAccuracyPct":number|null,"shapeFeedback":string|null,"swingPlane":"on-plane|over-the-top|under-plane","hipRotation":"1-sentence","shoulderTurn":"1-sentence","weightTransfer":"1-sentence","tempo":"good|too-fast|too-slow","impactPosition":"1-sentence","followThrough":"1-sentence","setupScore":number,"backswingScore":number,"downswingScore":number,"impactScore":number,"followThroughScore":number,"overallScore":number,"primaryFix":"single most important fix","coachingTips":["tip1","tip2","tip3","tip4"],"strengths":["s1","s2"],"drills":["Name: description","Name: description","Name: description"]}`;
+}
+function fallback(club,shape){
+  const bm=BM[club]||BM['7-Iron'];
+  const sp=bm.s-3+Math.random()*6;
+  return{swingSpeed:+sp.toFixed(1),ballSpeed:+(sp*1.42).toFixed(1),smashFactor:+(1.38+Math.random()*.1).toFixed(2),carryDistance:Math.round(bm.c-8+Math.random()*16),totalDistance:Math.round(bm.c+12+Math.random()*14),launchAngle:+(bm.l-1+Math.random()*2).toFixed(1),spinRate:Math.round(bm.sp-300+Math.random()*600),ballFlight:shape||'straight',targetShapeAchieved:null,shapeAccuracyPct:null,shapeFeedback:null,swingPlane:'on-plane',hipRotation:'Hip rotation looks adequate through impact.',shoulderTurn:'Shoulder turn appears solid.',weightTransfer:'Weight shift loading well.',tempo:'good',impactPosition:'Impact position looks reasonable.',followThrough:'Follow through extends toward target.',setupScore:7,backswingScore:6.5,downswingScore:7,impactScore:6.5,followThroughScore:7,overallScore:6.8,primaryFix:'Keep your head still through impact for more consistent contact.',coachingTips:['Maintain spine angle from address through impact','Initiate downswing with hips','Keep wrists hinged until just before impact','Finish fully toward target'],strengths:['Good posture at address','Committed swing with full follow through'],drills:['Feet Together Drill: Hit shots with feet together to improve balance','Pause at Top: Pause 1 second at top of backswing to check position','Impact Bag: Practice proper hand position at impact using a bag']};
+}
+async function analyzeImage(imageData){
+  if(!G.apiKey){toast('Add your Gemini API key in Settings ⚙ first',3500);openSettings();return;}
+  document.getElementById('analyzing-ov').style.display='flex';
+  document.getElementById('analyze-btn').disabled=true;
+  setHUD('partial','Analyzing…');
+  const base64=imageData.replace(/^data:image\/[a-z+]+;base64,/,'');
+  const prompt=buildPrompt(G.club,G.mode,G.targetShape,G.practicing,G.foam,G.swingType);
+  try{
+    const url=`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${G.apiKey}`;
+    const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{inline_data:{mime_type:'image/jpeg',data:base64}},{text:prompt}]}],generationConfig:{temperature:0.2,maxOutputTokens:1500}})});
+    const data=await res.json();
+    if(data.error)throw new Error(data.error.message);
+    const text=data.candidates?.[0]?.content?.parts?.[0]?.text||'';
+    let a;
+    try{const clean=text.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim();const s=clean.indexOf('{'),e=clean.lastIndexOf('}');a=JSON.parse(clean.slice(s,e+1));}
+    catch{a=fallback(G.club,G.targetShape);}
+    applyAnalysis(a);
+    // Save session
+    const sess={id:Date.now(),club:G.club,mode:G.mode,targetShape:G.mode==='shot-shape'?G.targetShape:null,analysis:a,ts:Date.now()};
+    G.sessions.unshift(sess);if(G.sessions.length>50)G.sessions.pop();
+    save();
+    setHUD('ready','Analyzed ✓');
+    if(G.simEnabled)runSim();
+  }catch(e){
+    toast('Gemini error: '+e.message,4000);
+    const a=fallback(G.club,G.targetShape);
+    applyAnalysis(a);
+    setHUD('partial','Fallback data');
+    if(G.simEnabled)runSim();
+  }finally{
+    document.getElementById('analyzing-ov').style.display='none';
+    document.getElementById('analyze-btn').disabled=false;
+  }
+}
+
+// ── Render analysis ───────────────────────────────────────────────────────────
+function fmtN(v,d=1){return v!=null?(+v).toFixed(d):'—';}
+function applyAnalysis(a){
+  G.analysis=a;G.lastAnalysis=a;
+  const flight=(a.ballFlight||'straight').toLowerCase();
+  const fc=FC[flight]||'#4ade80';
+  // Big stats
+  document.getElementById('s-swing').innerHTML=`${fmtN(a.swingSpeed)}<span class="big-unit">mph</span>`;
+  document.getElementById('s-ball').innerHTML=`${fmtN(a.ballSpeed)}<span class="big-unit">mph</span>`;
+  document.getElementById('s-carry').innerHTML=`${a.carryDistance!=null?Math.round(a.carryDistance):'—'}<span class="big-unit">yd</span>`;
+  document.getElementById('s-launch').textContent=fmtN(a.launchAngle);
+  document.getElementById('s-spin').textContent=a.spinRate!=null?Math.round(a.spinRate):'—';
+  document.getElementById('s-smash').textContent=fmtN(a.smashFactor,2);
+  document.getElementById('s-total').textContent=a.totalDistance!=null?Math.round(a.totalDistance):'—';
+  // Result banner
+  document.getElementById('result-banner').style.display='flex';
+  document.getElementById('r-score').textContent=a.overallScore!=null?fmtN(a.overallScore):'—';
+  const fb=document.getElementById('r-flight');
+  fb.textContent=flight;fb.style.background=fc+'22';fb.style.color=fc;fb.style.border='1px solid '+fc+'44';
+  document.getElementById('r-meta').textContent=`${G.club} · ${a.swingPlane||'—'} · ${a.tempo||'—'}`;
+  // Coach
+  if(G.mode==='coach'){
+    document.getElementById('coach-section').style.display='block';
+    renderCoach(a);
+  }
+  // Shot shape
+  if(G.mode==='shot-shape'){
+    document.getElementById('shape-result').style.display='block';
+    document.getElementById('shape-pct').textContent=a.shapeAccuracyPct!=null?Math.round(a.shapeAccuracyPct)+'%':'—%';
+    document.getElementById('shape-feedback').textContent=a.shapeFeedback||'Swing analyzed. Check metrics above.';
+  }
+  // Sim stats
+  updateSimStats(a);
+}
+function safeArr(v){if(Array.isArray(v))return v;try{return JSON.parse(v||'[]');}catch{return[];}}
+function renderCoach(a){
+  const tips=safeArr(a.coachingTips);
+  const strengths=safeArr(a.strengths);
+  const drills=safeArr(a.drills);
+  const scores=[['Setup',a.setupScore],['Backswing',a.backswingScore],['Downswing',a.downswingScore],['Impact',a.impactScore],['Follow-Thru',a.followThroughScore],['Overall',a.overallScore]];
+  const sc=v=>!v?'#555':v>=8?'#4ade80':v>=6?'#b9f542':v>=4?'#fbbf24':'#f87171';
+  let html='';
+  if(a.primaryFix)html+=`<div class="primary-fix"><span style="color:var(--accent);font-size:16px;flex-shrink:0">⚡</span><div><div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--accent);margin-bottom:3px">#1 Priority Fix</div><div style="font-size:13px;color:var(--text);line-height:1.45">${a.primaryFix}</div></div></div>`;
+  html+=`<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3)">Swing Scores</div>`;
+  html+=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px">`;
+  scores.forEach(([l,v])=>{html+=`<div class="score-box"><div style="font-family:'DM Mono',monospace;font-weight:700;font-size:18px;color:${sc(v)}">${v?(+v).toFixed(1):'—'}</div><div style="font-size:8px;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin-top:2px;text-align:center">${l}</div></div>`;});
+  html+=`</div>`;
+  if(tips.length){
+    html+=`<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3)">Tips</div>`;
+    tips.slice(0,4).forEach(t=>{html+=`<div class="tip-item"><span style="color:var(--accent);font-weight:700;flex-shrink:0">›</span>${t}</div>`;});
+  }
+  if(strengths.length){
+    html+=`<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3)">Strengths</div><div style="display:flex;gap:6px">`;
+    strengths.forEach(s=>{html+=`<div class="strength-chip">✓ ${s}</div>`;});
+    html+=`</div>`;
+  }
+  if(drills.length){
+    html+=`<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3)">Drills</div>`;
+    drills.forEach(d=>{const[n,...r]=d.split(':');html+=`<div class="drill-item"><div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:2px">${n}</div>${r.length?`<div style="font-size:11px;color:var(--text2)">${r.join(':').trim()}</div>`:''}</div>`;});
+  }
+  document.getElementById('coach-section').innerHTML=html;
+}
+function clearResult(){
+  G.analysis=null;
+  document.getElementById('result-banner').style.display='none';
+  document.getElementById('coach-section').style.display='none';
+  document.getElementById('shape-result').style.display='none';
+  ['s-swing','s-ball','s-carry'].forEach(id=>{document.getElementById(id).innerHTML='<span style="color:var(--text3);font-size:.7em">—</span>';});
+  ['s-launch','s-spin','s-smash','s-total'].forEach(id=>{document.getElementById(id).textContent='—';});
+  if(G.cameraOn)setHUD('partial','Camera Active');else setHUD('none','');
+  disableSim();
+}
+
+// ── Simulation ────────────────────────────────────────────────────────────────
+let simRaf=null,simStart=0;
+function enableSim(){
+  G.simEnabled=true;
+  document.getElementById('sim-off').style.display='none';
+  document.getElementById('sim-active').style.display='block';
+  drawSim(0);
+  if(G.lastAnalysis)runSim();
+}
+function disableSim(){
+  G.simEnabled=false;
+  cancelAnimationFrame(simRaf);
+  document.getElementById('sim-off').style.display='flex';
+  document.getElementById('sim-active').style.display='none';
+}
+function playSim(){if(G.lastAnalysis)runSim();else toast('Analyze a swing first');}
+function stopSim(){cancelAnimationFrame(simRaf);G.simPlaying=false;document.getElementById('sim-play-btn').style.display='';document.getElementById('sim-stop-btn').style.display='none';}
+function runSim(){
+  cancelAnimationFrame(simRaf);
+  const carry=(G.lastAnalysis?.carryDistance)||100;
+  const dur=Math.min(3400,Math.max(1800,carry*13));
+  G.simProgress=0;simStart=performance.now();G.simPlaying=true;
+  document.getElementById('sim-play-btn').style.display='none';
+  document.getElementById('sim-stop-btn').style.display='';
+  function tick(now){
+    const p=Math.min(1,(now-simStart)/dur);
+    G.simProgress=p;drawSim(p);
+    if(p<1)simRaf=requestAnimationFrame(tick);
+    else{G.simPlaying=false;document.getElementById('sim-play-btn').style.display='';document.getElementById('sim-stop-btn').style.display='none';}
+  }
+  simRaf=requestAnimationFrame(tick);
+}
+function updateSimStats(a){
+  document.getElementById('sim-hint').textContent=a?'AI data ready — tap to enable':'Analyze a swing to activate';
+  const b=document.getElementById('sim-enable-btn');
+  b.style.borderColor=a?'hsl(142,50%,28%)':'var(--border2)';b.style.color=a?'hsl(142,60%,68%)':'var(--text3)';b.style.background=a?'hsl(142,50%,10%)':'var(--bg2)';
+  if(a){
+    const shape=(a.ballFlight||'straight').toLowerCase();const fc=FC[shape]||'#4ade80';
+    const badge=document.getElementById('sim-shape-badge');badge.textContent=shape;badge.style.background=fc+'18';badge.style.color=fc;
+    document.getElementById('ss-carry').textContent=a.carryDistance?Math.round(a.carryDistance)+'yd':'—';
+    document.getElementById('ss-ball').textContent=a.ballSpeed?(+a.ballSpeed).toFixed(1):'—';
+    document.getElementById('ss-spin').textContent=a.spinRate?Math.round(a.spinRate)+'rpm':'—';
+    document.getElementById('ss-launch').textContent=a.launchAngle?(+a.launchAngle).toFixed(1)+'°':'—';
+  }
+}
+function drawSim(progress){
+  const a=G.lastAnalysis||{};
+  const shape=(a.ballFlight||'straight').toLowerCase();
+  const launch=a.launchAngle||18;const carry=a.carryDistance||100;
+  const W=400,H=200,cx=200,vpY=16,groundY=H-18;
+  const tX=cx,tY=groundY;
+  const drift=DRIFT[shape]||0;
+  const apexF=Math.min(.88,Math.max(.15,launch/45));
+  const lX=cx+drift,lY=groundY-4;
+  const aX=cx+drift*.32,aY=vpY+(groundY-vpY)*(1-apexF);
+  const tc=FC[shape]||'#4ade80';
+  const fwLb=cx-125,fwRb=cx+125,fwLt=cx-20,fwRt=cx+20;
+  const bp=t=>{const m=1-t;return{x:m*m*tX+2*m*t*aX+t*t*lX,y:m*m*tY+2*m*t*aY+t*t*lY};};
+  const ball=bp(progress);
+  let svg=`<defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="hsl(222,32%,5%)"/><stop offset="100%" stop-color="hsl(165,18%,6%)"/></linearGradient>
+    <linearGradient id="fw" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="hsl(138,32%,9%)"/><stop offset="100%" stop-color="hsl(140,40%,11%)"/></linearGradient>
+    <linearGradient id="rg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="hsl(138,16%,6%)"/><stop offset="100%" stop-color="hsl(140,18%,8%)"/></linearGradient>
+    <filter id="glow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <filter id="bfx"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <clipPath id="cl"><rect x="0" y="0" width="${progress*100}%" height="${H}"/></clipPath>
+  </defs>
+  <rect width="${W}" height="${H}" fill="url(#sky)"/>
+  <ellipse cx="${cx}" cy="${vpY+4}" rx="70" ry="8" fill="hsl(160,50%,12%)" opacity=".3"/>
+  <polygon points="0,${H} ${W},${H} ${fwRt},${vpY+8} ${fwLt},${vpY+8}" fill="url(#rg)"/>
+  <polygon points="${fwLb},${H} ${fwRb},${H} ${fwRt},${vpY+8} ${fwLt},${vpY+8}" fill="url(#fw)"/>`;
+  [.22,.44,.66,.86].forEach(t=>{
+    const lx=fwLb+(fwLt-fwLb)*t,rx=fwRb+(fwRt-fwRb)*t,y=groundY+(vpY-groundY)*t;
+    svg+=`<line x1="${lx}" y1="${y}" x2="${rx}" y2="${y}" stroke="rgba(255,255,255,.07)" stroke-width=".5"/><text x="${rx+4}" y="${y+3}" font-size="5" fill="rgba(255,255,255,.22)" font-family="monospace">${Math.round(carry*t)}</text>`;
+  });
+  svg+=`<ellipse cx="${tX}" cy="${tY}" rx="5" ry="2" fill="${tc}" opacity=".3"/>
+  <line x1="${tX}" y1="${tY}" x2="${tX}" y2="${tY-6}" stroke="${tc}" stroke-width="1.2" opacity=".5"/>
+  <path d="M ${tX},${tY} Q ${aX},${aY} ${lX},${lY}" stroke="${tc}" stroke-width="1" fill="none" opacity=".1"/>`;
+  if(progress>0){
+    svg+=`<g clip-path="url(#cl)" filter="url(#glow)"><path d="M ${tX},${tY} Q ${aX},${aY} ${lX},${lY}" stroke="${tc}" stroke-width="2.5" fill="none" opacity=".9"/></g>`;
+    [.055,.11,.17,.235,.31].forEach((off,i)=>{const p=bp(Math.max(0,progress-off));svg+=`<circle cx="${p.x}" cy="${p.y}" r="${3.5-i*.45}" fill="${tc}" opacity="${(1-i/5)*.35}"/>`;});
+    svg+=`<g filter="url(#bfx)"><circle cx="${ball.x}" cy="${ball.y}" r="4.5" fill="white" opacity=".95"/></g>`;
+  }
+  if(progress>.85){const op=(progress-.85)/.15;svg+=`<ellipse cx="${lX}" cy="${lY+2}" rx="8" ry="4" fill="${tc}" opacity="${op*.4}"/><line x1="${lX}" y1="${lY-4}" x2="${lX}" y2="${lY-16}" stroke="${tc}" stroke-width="1" opacity="${op*.7}"/><polygon points="${lX},${lY-16} ${lX+6},${lY-12} ${lX},${lY-8}" fill="${tc}" opacity="${op*.7}"/>`;}
+  document.getElementById('sim-svg').innerHTML=svg;
+}
+
+// ── Gemini Chat ───────────────────────────────────────────────────────────────
+function openChat(){document.getElementById('chat-panel').classList.add('open');setTimeout(()=>document.getElementById('chat-input').focus(),350);}
+function closeChat(){document.getElementById('chat-panel').classList.remove('open');}
+
+async function sendChat(override){
+  if(!G.apiKey){toast('Add your Gemini API key in Settings ⚙ first',3500);closeChat();openSettings();return;}
+  const input=document.getElementById('chat-input');
+  const text=(override||input.value).trim();
+  if(!text||G.chatStreaming)return;
+  input.value='';G.chatStreaming=true;
+  document.getElementById('chat-send').disabled=true;
+
+  G.chatMsgs.push({role:'user',parts:[{text}]});
+  appendMsg('user',text);
+
+  const loadId='msg-'+Date.now();
+  const div=document.createElement('div');
+  div.style.cssText='display:flex;gap:8px;max-width:88%';div.id=loadId;
+  div.innerHTML=`<div class="msg-av" style="background:var(--acdim);color:var(--accent)">AI</div><div class="msg-bubble ai" id="${loadId}-bubble"><span style="opacity:.5">●●●</span></div>`;
+  document.getElementById('chat-msgs').appendChild(div);
+  scrollChat();
+
+  // Build context system message
+  const a=G.lastAnalysis;
+  let sysText=`You are SwingAI Coach, an expert PGA-certified golf instructor coaching ${G.profile.name||'the golfer'}. Deep expertise in swing mechanics, ball flight laws, launch monitor data, drills. Be direct, encouraging, specific. Use real golf terminology. Keep responses concise (2-4 sentences for quick questions).`;
+  if(a)sysText+=`\n\nLatest swing data (${G.club}):\n- Swing speed: ${a.swingSpeed?.toFixed(1)} mph, Ball speed: ${a.ballSpeed?.toFixed(1)} mph\n- Smash: ${a.smashFactor?.toFixed(2)}, Carry: ${a.carryDistance?.toFixed(0)} yds\n- Launch: ${a.launchAngle?.toFixed(1)}°, Spin: ${a.spinRate?Math.round(a.spinRate):0} rpm\n- Flight: ${a.ballFlight}, Score: ${a.overallScore?.toFixed(1)}/10\n- Plane: ${a.swingPlane}, Tempo: ${a.tempo}\n- Fix: ${a.primaryFix}\nReference these naturally.`;
+
+  // Add system as first user message if no history
+  const msgs=[{role:'user',parts:[{text:sysText+'\n\nReply: "Understood, ready to coach."'}]},{role:'model',parts:[{text:'Understood, ready to coach.'}]},...G.chatMsgs];
+
+  try{
+    const url=`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse&key=${G.apiKey}`;
+    const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:msgs,generationConfig:{temperature:.7,maxOutputTokens:600}})});
+    const reader=res.body.getReader();const decoder=new TextDecoder();
+    let buf='',full='';
+    const bubble=document.getElementById(loadId+'-bubble');
+    bubble.innerHTML='';
+    while(true){
+      const{done,value}=await reader.read();if(done)break;
+      buf+=decoder.decode(value,{stream:true});
+      const lines=buf.split('\n');buf=lines.pop()||'';
+      for(const line of lines){
+        if(!line.startsWith('data: '))continue;
+        const data=line.slice(6).trim();if(data==='[DONE]')break;
+        try{const evt=JSON.parse(data);const t=evt.candidates?.[0]?.content?.parts?.[0]?.text||'';if(t){full+=t;bubble.textContent=full;scrollChat();}}catch{}
+      }
+    }
+    G.chatMsgs.push({role:'model',parts:[{text:full}]});
+  }catch(e){
+    document.getElementById(loadId+'-bubble').textContent='Error connecting to AI coach. Check your API key in Settings.';
+  }finally{G.chatStreaming=false;document.getElementById('chat-send').disabled=false;}
+}
+function appendMsg(role,content){
+  const div=document.createElement('div');
+  div.style.cssText='display:flex;gap:8px;max-width:88%;'+(role==='user'?'align-self:flex-end;flex-direction:row-reverse':'');
+  const isUser=role==='user';
+  div.innerHTML=`<div class="msg-av" style="background:${isUser?'var(--bg3)':'var(--acdim)'};color:${isUser?'var(--text2)':'var(--accent)'}">${isUser?(G.profile.name||'U').charAt(0).toUpperCase():'AI'}</div><div class="msg-bubble ${role}">${content}</div>`;
+  document.getElementById('chat-msgs').appendChild(div);scrollChat();
+}
+function scrollChat(){const el=document.getElementById('chat-msgs');el.scrollTop=el.scrollHeight;}
+
+// ── History ───────────────────────────────────────────────────────────────────
+function renderHistory(){
+  const el=document.getElementById('history-list');
+  if(!G.sessions.length){el.innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:50px 20px;gap:10px;color:var(--text3);text-align:center"><div style="font-size:40px;opacity:.2">⛳</div><div style="font-size:13px;font-weight:600">No sessions yet</div><div style="font-size:11px">Analyze a swing to start your history</div></div>';return;}
+  el.innerHTML=G.sessions.map(s=>{
+    const a=s.analysis||{};
+    const t=new Date(s.ts);
+    return`<div class="hist-item"><div class="hist-score">${a.overallScore?(+a.overallScore).toFixed(1):'—'}</div><div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:700">${s.club}</div><div style="font-size:10px;color:var(--text3);margin-top:1px">${s.mode} · ${t.toLocaleDateString()} ${t.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div></div><div style="font-size:13px;font-weight:700;font-family:'DM Mono',monospace;color:var(--accent2)">${a.carryDistance?Math.round(a.carryDistance)+'yd':'—'}</div></div>`;
+  }).join('');
+}
+function renderProfileStats(){
+  const el=document.getElementById('prof-stats');
+  if(!G.sessions.length){el.textContent='No sessions yet.';return;}
+  const avg=s=>G.sessions.reduce((a,x)=>a+(x.analysis?.[s]||0),0)/G.sessions.length;
+  el.innerHTML=`<strong style="color:var(--text)">${G.sessions.length}</strong> sessions recorded<br/>Avg score: <strong style="color:var(--accent)">${avg('overallScore').toFixed(1)}/10</strong><br/>Avg carry: <strong style="color:var(--accent)">${Math.round(avg('carryDistance'))} yds</strong>`;
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+load();
+drawSim(0);
+// Scroll club to default
+setTimeout(()=>{const a=document.querySelector('.chip.active');if(a)a.scrollIntoView({inline:'center',block:'nearest'});},300);
+// If no API key, nudge toward settings
+if(!G.apiKey)setTimeout(()=>toast('⚙ Add your Gemini API key in Settings to start',4000),1000);
+</script>
+
+
+</body></html>
